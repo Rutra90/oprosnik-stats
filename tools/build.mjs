@@ -181,6 +181,24 @@ const payload = {
 };
 
 /* ---------- шифрование ---------- */
+/* Отпечаток содержимого: если данные и пароль те же — файл не перезаписываем.
+   Иначе случайные salt/iv дают новый шифроблок каждый прогон и бот
+   коммитит впустую каждый час. */
+const srcHash = crypto.createHash('sha256')
+  .update(JSON.stringify({ ...payload, generatedAt: '' }))
+  .digest('hex');
+const pwHash = crypto.createHash('sha256').update(password).digest('hex').slice(0, 16);
+
+try {
+  const prev = JSON.parse(await fs.readFile(OUT, 'utf8'));
+  if (prev && prev.src === srcHash && prev.pw === pwHash) {
+    console.log('Данные не изменились — файл не перезаписываю.');
+    console.log('Прохождений:', payload.total,
+      '| средний:', payload.avgRating ? payload.avgRating.toFixed(2) : '—');
+    process.exit(0);
+  }
+} catch { /* файла ещё нет — собираем */ }
+
 const salt = crypto.randomBytes(16);
 const iv = crypto.randomBytes(12);
 const key = crypto.pbkdf2Sync(password, salt, ITERATIONS, 32, 'sha256');
@@ -193,6 +211,8 @@ const blob = {
   alg: 'AES-256-GCM',
   kdf: 'PBKDF2-SHA256',
   iter: ITERATIONS,
+  src: srcHash,
+  pw: pwHash,
   salt: salt.toString('base64'),
   iv: iv.toString('base64'),
   tag: tag.toString('base64'),
