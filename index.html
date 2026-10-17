@@ -3,143 +3,628 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#face30">
-<title>Опрос клиники — статистика</title>
+<meta name="theme-color" content="#1c1c1e">
+<meta name="robots" content="noindex, nofollow">
+<title>Опросник — отчёт</title>
 <style>
   :root{
-    --accent:#face30; --text:#222; --muted:#7a7a7a; --line:#e6e6e6;
-    --bg:#f2f3f5; --card:#fff; --pos:#1b7f1b; --posbg:#d9f2d9;
-    --neg:#b3261e; --negbg:#f9d6d5;
+    --accent:#face30;
+    --accent-dk:#e0b71f;
+    --ink:#16181d;
+    --text:#242830;
+    --muted:#767c88;
+    --line:#e7e9ee;
+    --bg:#f4f5f7;
+    --card:#ffffff;
+    --pos:#12855a;
+    --posbg:#e3f5ec;
+    --neg:#c0392b;
+    --negbg:#fbe6e3;
+    --mid:#c99a06;
+    --midbg:#fdf3d8;
+    --radius:16px;
+    --shadow:0 1px 2px rgba(16,24,40,.06), 0 8px 24px -12px rgba(16,24,40,.18);
   }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);
-    font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
-  .wrap{max-width:960px;margin:0 auto;padding:18px}
-  h1{font-size:20px;margin:0 0 4px}
-  .sub{color:var(--muted);font-size:12px;margin-bottom:14px}
-  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:14px}
-  .kpi{background:var(--card);border-radius:14px;padding:13px 15px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
-  .kpi .t{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px}
-  .kpi .v{font-size:26px;font-weight:700;margin-top:3px}
+  html,body{margin:0}
+  body{
+    background:var(--bg); color:var(--text);
+    font:15px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1080px;margin:0 auto;padding:0 16px 64px}
+  .hide{display:none!important}
+
+  /* ---------- шапка ---------- */
+  .top{
+    background:var(--ink); color:#fff; padding:20px 0 22px;
+    border-radius:0 0 22px 22px; margin-bottom:18px;
+  }
+  .top .wrap{padding-bottom:0}
+  .top h1{font-size:21px;margin:0 0 4px;letter-spacing:-.2px;font-weight:650}
+  .top .sub{color:#a7adb9;font-size:13px}
+  .top .row{display:flex;gap:12px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+  .lock{
+    background:rgba(255,255,255,.1);color:#fff;border:1px solid rgba(255,255,255,.18);
+    border-radius:10px;padding:8px 13px;font-size:13px;cursor:pointer;white-space:nowrap;
+  }
+  .lock:hover{background:rgba(255,255,255,.16)}
+
+  /* ---------- ворота ---------- */
+  .gate{max-width:420px;margin:8vh auto;background:var(--card);border-radius:var(--radius);
+    padding:26px;box-shadow:var(--shadow);text-align:center}
+  .gate h2{margin:0 0 6px;font-size:19px}
+  .gate p{color:var(--muted);font-size:13px;margin:0 0 18px}
+  .gate input{
+    width:100%;padding:13px 14px;font-size:16px;border:1px solid var(--line);
+    border-radius:11px;outline:none;background:#fafbfc;
+  }
+  .gate input:focus{border-color:var(--accent);background:#fff;box-shadow:0 0 0 3px rgba(250,206,48,.22)}
+  .gate button{
+    width:100%;margin-top:12px;padding:13px;font-size:15px;font-weight:600;cursor:pointer;
+    border:none;border-radius:11px;background:var(--accent);color:#241c00;
+  }
+  .gate button:hover{background:var(--accent-dk)}
+  .gate button:disabled{opacity:.55;cursor:default}
+  .gate .err{color:var(--neg);font-size:13px;margin-top:12px;min-height:18px}
+
+  /* ---------- вкладки ---------- */
+  .tabs{display:flex;gap:6px;background:#e9ebef;padding:4px;border-radius:12px;
+    margin-bottom:16px;overflow-x:auto;scrollbar-width:none}
+  .tabs::-webkit-scrollbar{display:none}
+  .tab{
+    flex:1;min-width:104px;text-align:center;padding:9px 12px;border-radius:9px;
+    font-size:13.5px;font-weight:550;color:#5d6470;cursor:pointer;white-space:nowrap;
+    border:none;background:transparent;font-family:inherit;
+  }
+  .tab.on{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgba(16,24,40,.12)}
+
+  /* ---------- карточки ---------- */
+  .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(148px,1fr));gap:10px;margin-bottom:14px}
+  .kpi{background:var(--card);border-radius:14px;padding:14px 15px;box-shadow:var(--shadow)}
+  .kpi .t{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;font-weight:600}
+  .kpi .v{font-size:27px;font-weight:700;margin-top:4px;letter-spacing:-.5px;line-height:1.1}
+  .kpi .n{font-size:11.5px;color:var(--muted);margin-top:3px}
   .kpi.pos .v{color:var(--pos)}
   .kpi.neg .v{color:var(--neg)}
-  .panel{background:var(--card);border-radius:14px;padding:15px;margin-bottom:14px;
-    box-shadow:0 1px 3px rgba(0,0,0,.07)}
-  .panel h2{font-size:15px;margin:0 0 10px}
-  .bars{display:flex;flex-direction:column;gap:7px}
-  .bar{display:grid;grid-template-columns:26px 1fr 38px;gap:9px;align-items:center;font-size:13px}
-  .bar .track{height:12px;border-radius:99px;background:#eee;overflow:hidden}
-  .bar .fill{height:100%;border-radius:99px;background:#bdbdbd}
-  .bar.pos .fill{background:var(--pos)}
-  .bar.neg .fill{background:var(--neg)}
-  .bar .n{text-align:right;color:var(--muted);font-size:12px}
-  .q{margin-bottom:13px}
-  .q .qt{font-weight:600;margin-bottom:5px;font-size:14px}
-  .chips{display:flex;flex-wrap:wrap;gap:5px}
-  .chip{background:#f4f4f4;border-radius:99px;padding:4px 9px;font-size:12px}
-  .chip b{font-weight:700}
-  .resp{display:flex;gap:10px;align-items:center;border-top:1px solid var(--line);padding:9px 0}
-  .resp:first-child{border-top:none}
-  .score{flex:0 0 auto;width:36px;height:36px;border-radius:9px;display:flex;
-    align-items:center;justify-content:center;font-weight:700;font-size:16px}
+  .kpi.mid .v{color:var(--mid)}
+
+  .panel{background:var(--card);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);margin-bottom:14px}
+  .panel h2{font-size:15px;margin:0 0 14px;letter-spacing:-.1px}
+  .panel h2 .hint{font-weight:400;color:var(--muted);font-size:12px;margin-left:6px}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  @media(max-width:720px){.grid2{grid-template-columns:1fr}}
+
+  /* ---------- распределение ---------- */
+  .dist{display:flex;align-items:flex-end;gap:6px;height:150px;margin-bottom:6px}
+  .dcol{flex:1;display:flex;flex-direction:column;justify-content:flex-end;align-items:center;height:100%;gap:5px}
+  .dcol .b{width:100%;border-radius:6px 6px 3px 3px;min-height:2px;transition:height .3s}
+  .dcol .b.pos{background:linear-gradient(180deg,#2fa878,#12855a)}
+  .dcol .b.neg{background:linear-gradient(180deg,#e06a5c,#c0392b)}
+  .dcol .n{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+  .dcol .l{font-size:12px;font-weight:600;color:#4a505c}
+  .axis{display:flex;gap:6px;border-top:1px solid var(--line);padding-top:6px}
+  .axis div{flex:1;text-align:center;font-size:11px;color:var(--muted)}
+
+  /* ---------- бары вопросов ---------- */
+  .qbar{display:grid;grid-template-columns:minmax(90px,1fr) 2.2fr 42px;gap:10px;align-items:center;
+    margin-bottom:7px;font-size:13px}
+  .qbar .lab{color:#3a3f49;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .qbar .track{height:20px;background:#f0f2f5;border-radius:6px;overflow:hidden}
+  .qbar .fill{height:100%;border-radius:6px;background:linear-gradient(90deg,#ffd75e,#face30);
+    min-width:3px;transition:width .35s}
+  .qbar .num{text-align:right;color:var(--muted);font-size:12px;font-variant-numeric:tabular-nums}
+
+  /* ---------- текстовые ответы ---------- */
+  .tlist{display:flex;flex-direction:column;gap:8px}
+  .titem{background:#fafbfc;border:1px solid var(--line);border-left:3px solid var(--accent);
+    border-radius:10px;padding:10px 12px}
+  .titem .txt{font-size:14px;color:#2c313a;white-space:pre-wrap;word-break:break-word}
+  .titem .who{font-size:11.5px;color:var(--muted);margin-top:5px}
+
+  /* ---------- отзывы ---------- */
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+  .filters input,.filters select{
+    padding:9px 12px;border:1px solid var(--line);border-radius:10px;font-size:13.5px;
+    background:#fafbfc;outline:none;font-family:inherit;color:var(--text)
+  }
+  .filters input{flex:1;min-width:150px}
+  .filters input:focus,.filters select:focus{border-color:var(--accent);background:#fff}
+
+  .resp{background:var(--card);border-radius:14px;box-shadow:var(--shadow);margin-bottom:10px;overflow:hidden}
+  .resp summary{
+    display:flex;gap:12px;align-items:center;padding:13px 15px;cursor:pointer;list-style:none;
+  }
+  .resp summary::-webkit-details-marker{display:none}
+  .score{
+    flex:0 0 auto;width:40px;height:40px;border-radius:11px;display:flex;align-items:center;
+    justify-content:center;font-weight:700;font-size:17px
+  }
   .score.pos{background:var(--posbg);color:var(--pos)}
   .score.neg{background:var(--negbg);color:var(--neg)}
-  .resp .meta{font-size:12px;color:var(--muted)}
-  .empty{color:var(--muted);text-align:center;padding:20px}
-  .hide{display:none!important}
+  .score.none{background:#eef0f3;color:var(--muted);font-size:13px}
+  .rname{font-weight:600;font-size:14.5px}
+  .rmeta{font-size:12px;color:var(--muted);margin-top:2px}
+  .rright{margin-left:auto;text-align:right;font-size:11.5px;color:var(--muted);white-space:nowrap}
+  .rbody{padding:0 15px 15px;border-top:1px solid var(--line)}
+  .qa{padding:9px 0;border-bottom:1px dashed var(--line)}
+  .qa:last-child{border-bottom:none}
+  .qa .k{font-size:12px;color:var(--muted);margin-bottom:3px}
+  .qa .v{font-size:14px;white-space:pre-wrap;word-break:break-word}
+  .qa .v.arr{display:flex;flex-wrap:wrap;gap:5px}
+  .tag{background:#f1f3f6;border-radius:7px;padding:3px 8px;font-size:12.5px}
+
+  .empty{color:var(--muted);text-align:center;padding:26px 10px;font-size:13.5px}
+  .foot{color:var(--muted);font-size:11.5px;text-align:center;margin-top:22px;line-height:1.6}
+
+  @media(max-width:560px){
+    .kpi .v{font-size:23px}
+    .dist{height:120px}
+    .qbar{grid-template-columns:1fr 1.6fr 34px;font-size:12.5px}
+    .rright{display:none}
+  }
+  @media print{
+    body{background:#fff}
+    .top{background:#fff;color:#000;border-bottom:2px solid #000;border-radius:0}
+    .top .sub{color:#555}
+    .lock,.tabs{display:none!important}
+    .panel,.kpi,.resp{box-shadow:none;border:1px solid #ddd;break-inside:avoid}
+  }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <h1>Опрос клиники — статистика</h1>
-  <div class="sub" id="sub">Загрузка…</div>
 
-  <div id="content" class="hide">
-    <div class="cards" id="kpis"></div>
-
-    <div class="panel">
-      <h2>Распределение оценок</h2>
-      <div class="bars" id="dist"></div>
-    </div>
-
-    <div class="panel">
-      <h2>Ответы по вопросам</h2>
-      <div id="questions"></div>
-    </div>
-
-    <div class="panel">
-      <h2>Последние прохождения</h2>
-      <div id="recent"></div>
+<header class="top">
+  <div class="wrap">
+    <div class="row">
+      <div>
+        <h1>Отчёт по опроснику</h1>
+        <div class="sub" id="sub">Загрузка…</div>
+      </div>
+      <button class="lock hide" id="lockBtn" type="button">Заблокировать</button>
     </div>
   </div>
+</header>
+
+<!-- ---------- пароль ---------- -->
+<div class="gate" id="gate">
+  <h2>Доступ по паролю</h2>
+  <p>Данные зашифрованы. Введите пароль, выданный владельцем отчёта.</p>
+  <input id="pw" type="password" autocomplete="current-password" placeholder="Пароль" inputmode="text">
+  <button id="openBtn" type="button">Открыть отчёт</button>
+  <div class="err" id="err"></div>
 </div>
 
+<!-- ---------- отчёт ---------- -->
+<main class="wrap hide" id="report">
+  <div class="tabs">
+    <button class="tab on" data-tab="overview" type="button">Обзор</button>
+    <button class="tab" data-tab="questions" type="button">Вопросы</button>
+    <button class="tab" data-tab="answers" type="button">Все ответы</button>
+  </div>
+
+  <section id="tab-overview">
+    <div class="cards" id="kpis"></div>
+    <div class="panel">
+      <h2>Распределение оценок<span class="hint" id="distHint"></span></h2>
+      <div class="dist" id="dist"></div>
+      <div class="axis" id="axis"></div>
+    </div>
+    <div class="grid2">
+      <div class="panel">
+        <h2>Ветки опроса</h2>
+        <div id="branches"></div>
+      </div>
+      <div class="panel">
+        <h2>Свежие оценки</h2>
+        <div id="recent"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="tab-questions" class="hide">
+    <div id="questions"></div>
+  </section>
+
+  <section id="tab-answers" class="hide">
+    <div class="panel">
+      <div class="filters">
+        <input id="q" type="search" placeholder="Поиск по имени, ID, тексту ответа…">
+        <select id="fBranch">
+          <option value="">Все ветки</option>
+          <option value="first">Первый раз</option>
+          <option value="repeat">Повторно</option>
+        </select>
+        <select id="fRating">
+          <option value="">Любая оценка</option>
+          <option value="pos">Положительные</option>
+          <option value="neg">Отрицательные</option>
+        </select>
+        <select id="fSort">
+          <option value="date-desc">Сначала новые</option>
+          <option value="date-asc">Сначала старые</option>
+          <option value="rating-desc">Оценка ↓</option>
+          <option value="rating-asc">Оценка ↑</option>
+        </select>
+        <button class="lock" id="csvBtn" type="button"
+          style="background:#1c1c1e;color:#fff;border-color:#1c1c1e">Экспорт CSV</button>
+      </div>
+      <div id="list"></div>
+    </div>
+  </section>
+
+  <div class="foot">
+    Данные получены с Яндекс.Диска и расшифрованы в браузере.<br>
+    Пароль и содержимое отчёта не передаются на сервер.
+  </div>
+</main>
+
 <script>
-const $ = (s) => document.querySelector(s);
+(function () {
+  'use strict';
 
-function esc(s) {
-  return String(s == null ? '' : s).replace(/[&<>"]/g, (c) =>
-    ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-}
+  var DATA_URL = 'data.enc.json';
+  var payload = null;
+  var password = '';
 
-function fmtDate(iso) {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (isNaN(d)) return String(iso);
-  return d.toLocaleString('ru-RU', {
-    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+  var $ = function (s) { return document.querySelector(s); };
+
+  function esc(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+      return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+    });
+  }
+
+  function b64(buf) {
+    var bytes = new Uint8Array(buf);
+    var s = '';
+    for (var i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+  }
+
+  function unb64(str) {
+    var bin = atob(str);
+    var out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  /* ---------- расшифровка ---------- */
+  async function decryptBlob(blob, pw) {
+    var enc = new TextEncoder();
+    var baseKey = await crypto.subtle.importKey(
+      'raw', enc.encode(pw), { name: 'PBKDF2' }, false, ['deriveKey']);
+    var key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt: unb64(blob.salt), iterations: blob.iter, hash: 'SHA-256' },
+      baseKey, { name: 'AES-GCM', length: 256 }, false, ['decrypt']);
+
+    var ct = unb64(blob.ct);
+    var tag = unb64(blob.tag);
+    var both = new Uint8Array(ct.length + tag.length);
+    both.set(ct, 0);
+    both.set(tag, ct.length);
+
+    var plain = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: unb64(blob.iv) }, key, both);
+    return JSON.parse(new TextDecoder().decode(plain));
+  }
+
+  /* ---------- форматирование ---------- */
+  function fmtDate(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d)) return String(iso);
+    return d.toLocaleString('ru-RU', {
+      day: '2-digit', month: '2-digit', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  function fmtShort(iso) {
+    if (!iso) return '—';
+    var d = new Date(iso);
+    if (isNaN(d)) return String(iso);
+    return d.toLocaleString('ru-RU', {
+      day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
+    });
+  }
+
+  function branchName(b) {
+    return b === 'first' ? 'Первый раз' : b === 'repeat' ? 'Повторно' : '—';
+  }
+
+  function num(v, digits) {
+    if (v == null || isNaN(v)) return '—';
+    return Number(v).toFixed(digits == null ? 2 : digits);
+  }
+
+  /* ---------- рендер: обзор ---------- */
+  function renderOverview(d) {
+    var pm = d.positiveMin || 7;
+
+    var cards = [
+      { t: 'Прохождений', v: d.total, n: 'с ответами' },
+      { t: 'Средний рейтинг', v: num(d.avgRating),
+        cls: d.avgRating >= pm ? 'pos' : d.avgRating >= pm - 1 ? 'mid' : 'neg',
+        n: 'из 9' },
+      { t: 'Положительных', v: d.positive, cls: 'pos', n: 'оценка ≥ ' + pm },
+      { t: 'Отрицательных', v: d.negative, cls: 'neg', n: 'оценка < ' + pm },
+      { t: 'Первый раз', v: num(d.avgFirst), n: d.firstCount + ' прохожд.' },
+      { t: 'Повторно', v: num(d.avgRepeat), n: d.repeatCount + ' прохожд.' }
+    ];
+
+    $('#kpis').innerHTML = cards.map(function (c) {
+      return '<div class="kpi ' + (c.cls || '') + '">' +
+        '<div class="t">' + esc(c.t) + '</div>' +
+        '<div class="v">' + esc(c.v) + '</div>' +
+        '<div class="n">' + esc(c.n) + '</div></div>';
+    }).join('');
+
+    /* распределение */
+    var dist = d.dist || {};
+    var keys = Object.keys(dist).sort(function (a, b) { return a - b; });
+    var max = Math.max.apply(null, keys.map(function (k) { return Number(dist[k]) || 0; }).concat([1]));
+    $('#dist').innerHTML = keys.map(function (k) {
+      var n = Number(dist[k]) || 0;
+      var cls = Number(k) >= pm ? 'pos' : 'neg';
+      var h = Math.max(n ? 6 : 0, Math.round(n / max * 100));
+      return '<div class="dcol"><div class="n">' + (n || '') + '</div>' +
+        '<div class="b ' + cls + '" style="height:' + h + '%"></div>' +
+        '<div class="l">' + esc(k) + '</div></div>';
+    }).join('');
+    $('#axis').innerHTML = keys.map(function (k) { return '<div>' + esc(k) + '</div>'; }).join('');
+    $('#distHint').textContent = 'оценка 1–9, зелёные — положительные';
+
+    /* ветки */
+    var rows = [
+      { n: 'Первый раз', c: d.firstCount || 0, a: d.avgFirst },
+      { n: 'Повторно', c: d.repeatCount || 0, a: d.avgRepeat }
+    ];
+    var maxC = Math.max.apply(null, rows.map(function (r) { return r.c; }).concat([1]));
+    $('#branches').innerHTML = rows.map(function (r) {
+      return '<div class="qbar"><div class="lab">' + esc(r.n) + '</div>' +
+        '<div class="track"><div class="fill" style="width:' +
+        (r.c / maxC * 100) + '%"></div></div>' +
+        '<div class="num">' + r.c + '</div></div>' +
+        '<div style="font-size:12px;color:#767c88;margin:-2px 0 10px 0">' +
+        'средняя оценка: <b style="color:#242830">' + num(r.a) + '</b></div>';
+    }).join('') || '<div class="empty">Нет данных</div>';
+
+    /* свежие */
+    var recent = (d.responses || []).slice(0, 6);
+    $('#recent').innerHTML = recent.map(function (r) {
+      var cls = r.rating == null ? 'none' : (r.rating >= pm ? 'pos' : 'neg');
+      return '<div class="resp" style="box-shadow:none;border:1px solid #e7e9ee;margin-bottom:7px">' +
+        '<div style="display:flex;gap:10px;align-items:center;padding:9px 11px">' +
+        '<div class="score ' + cls + '">' + (r.rating == null ? '—' : r.rating) + '</div>' +
+        '<div><div class="rname" style="font-size:13.5px">' + esc(r.name || 'Без имени') + '</div>' +
+        '<div class="rmeta">' + esc(fmtShort(r.date)) + ' · ' + esc(branchName(r.branch)) +
+        '</div></div></div></div>';
+    }).join('') || '<div class="empty">Нет прохождений</div>';
+  }
+
+  /* ---------- рендер: вопросы ---------- */
+  function renderQuestions(d) {
+    var pm = d.positiveMin || 7;
+    var qs = d.questions || [];
+    if (!qs.length) {
+      $('#questions').innerHTML = '<div class="panel"><div class="empty">Пока нет ответов</div></div>';
+      return;
+    }
+
+    $('#questions').innerHTML = qs.map(function (item) {
+      var head = '<div class="panel"><h2>' + esc(item.q) +
+        '<span class="hint">' + (item.type === 'text'
+          ? 'свободные ответы: ' + item.texts.length
+          : 'ответов: ' + item.answers) + '</span></h2>';
+
+      if (item.type === 'text') {
+        if (!item.texts.length) return head + '<div class="empty">Нет текстовых ответов</div></div>';
+        return head + '<div class="tlist">' + item.texts.map(function (t) {
+          return '<div class="titem"><div class="txt">' + esc(t.value) + '</div>' +
+            '<div class="who">' + esc(t.name || 'Без имени') + ' · ' +
+            esc(fmtShort(t.date)) + '</div></div>';
+        }).join('') + '</div></div>';
+      }
+
+      var max = Math.max.apply(null, item.items.map(function (x) { return x.count; }).concat([1]));
+      return head + item.items.map(function (x) {
+        return '<div class="qbar"><div class="lab" title="' + esc(x.value) + '">' +
+          esc(x.value) + '</div>' +
+          '<div class="track"><div class="fill" style="width:' +
+          (x.count / max * 100) + '%"></div></div>' +
+          '<div class="num">' + x.count + '</div></div>';
+      }).join('') + '</div>';
+    }).join('');
+  }
+
+  /* ---------- рендер: все ответы ---------- */
+  function answerPairs(r) {
+    var a = r.answers || {};
+    return Object.keys(a).map(function (k) {
+      return { k: k, v: a[k] };
+    });
+  }
+
+  function renderList(d) {
+    var pm = d.positiveMin || 7;
+    var q = ($('#q').value || '').trim().toLowerCase();
+    var fb = $('#fBranch').value;
+    var fr = $('#fRating').value;
+    var sort = $('#fSort').value;
+
+    var list = (d.responses || []).filter(function (r) {
+      if (fb && r.branch !== fb) return false;
+      if (fr === 'pos' && !(r.rating >= pm)) return false;
+      if (fr === 'neg' && !(r.rating != null && r.rating < pm)) return false;
+      if (!q) return true;
+      var hay = [r.name, r.phone, r.clientId, r.id, JSON.stringify(r.answers)]
+        .join(' ').toLowerCase();
+      return hay.indexOf(q) !== -1;
+    });
+
+    list.sort(function (a, b) {
+      if (sort === 'rating-desc') return (b.rating || 0) - (a.rating || 0);
+      if (sort === 'rating-asc') return (a.rating || 0) - (b.rating || 0);
+      var da = new Date(a.date).getTime() || 0;
+      var db = new Date(b.date).getTime() || 0;
+      return sort === 'date-asc' ? da - db : db - da;
+    });
+
+    if (!list.length) {
+      $('#list').innerHTML = '<div class="empty">Ничего не найдено</div>';
+      return;
+    }
+
+    $('#list').innerHTML = list.map(function (r) {
+      var cls = r.rating == null ? 'none' : (r.rating >= pm ? 'pos' : 'neg');
+      var pairs = answerPairs(r);
+      return '<details class="resp"><summary>' +
+        '<div class="score ' + cls + '">' + (r.rating == null ? '—' : r.rating) + '</div>' +
+        '<div><div class="rname">' + esc(r.name || 'Без имени') + '</div>' +
+        '<div class="rmeta">' + esc(branchName(r.branch)) + ' · ' +
+        esc(fmtDate(r.date)) + '</div></div>' +
+        '<div class="rright">ID: ' + esc((r.clientId || '—').slice(-8)) + '</div>' +
+        '</summary><div class="rbody">' +
+        '<div class="qa"><div class="k">ID ответа</div><div class="v">' +
+        esc(r.id || '—') + '</div></div>' +
+        '<div class="qa"><div class="k">ID клиента</div><div class="v">' +
+        esc(r.clientId || '—') + '</div></div>' +
+        (r.phone ? '<div class="qa"><div class="k">Телефон</div><div class="v">' +
+          esc(r.phone) + '</div></div>' : '') +
+        pairs.map(function (p) {
+          var body = Array.isArray(p.v)
+            ? '<div class="v arr">' + p.v.map(function (x) {
+                return '<span class="tag">' + esc(x) + '</span>';
+              }).join('') + '</div>'
+            : '<div class="v">' + esc(p.v) + '</div>';
+          return '<div class="qa"><div class="k">' + esc(p.k) + '</div>' + body + '</div>';
+        }).join('') +
+        '</div></details>';
+    }).join('');
+  }
+
+  /* ---------- CSV ---------- */
+  function exportCsv(d) {
+    var rows = d.responses || [];
+    var qs = (d.questions || []).map(function (x) { return x.q; });
+
+    function cell(v) {
+      var s = Array.isArray(v) ? v.join('; ') : (v == null ? '' : String(v));
+      return '"' + s.replace(/"/g, '""') + '"';
+    }
+
+    var head = ['ID', 'ID клиента', 'Имя', 'Телефон', 'Дата', 'Ветка', 'Оценка']
+      .concat(qs);
+
+    var lines = [head.map(cell).join(';')];
+    rows.forEach(function (r) {
+      var line = [
+        r.id, r.clientId, r.name, r.phone, r.date, branchName(r.branch), r.rating
+      ].concat(qs.map(function (q) { return (r.answers || {})[q] || ''; }));
+      lines.push(line.map(cell).join(';'));
+    });
+
+    var blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'oprosnik-' + new Date().toISOString().slice(0, 10) + '.csv';
+    a.click();
+    setTimeout(function () { URL.revokeObjectURL(a.href); }, 3000);
+  }
+
+  /* ---------- вкладки ---------- */
+  function showTab(name) {
+    ['overview', 'questions', 'answers'].forEach(function (t) {
+      document.getElementById('tab-' + t).classList.toggle('hide', t !== name);
+    });
+    document.querySelectorAll('.tab').forEach(function (b) {
+      b.classList.toggle('on', b.dataset.tab === name);
+    });
+    window.scrollTo(0, 0);
+  }
+
+  /* ---------- запуск ---------- */
+  async function open(pw) {
+    var errEl = $('#err');
+    errEl.textContent = '';
+    $('#openBtn').disabled = true;
+    try {
+      var r = await fetch(DATA_URL, { cache: 'no-store' });
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      var blob = await r.json();
+      var data = await decryptBlob(blob, pw);
+
+      password = pw;
+      payload = data;
+
+      $('#gate').classList.add('hide');
+      $('#report').classList.remove('hide');
+      $('#lockBtn').classList.remove('hide');
+      $('#pw').value = '';
+
+      $('#sub').textContent = 'Обновлено: ' + fmtDate(data.generatedAt) +
+        ' · прохождений: ' + data.total;
+
+      renderOverview(data);
+      renderQuestions(data);
+      renderList(data);
+      showTab('overview');
+    } catch (e) {
+      errEl.textContent = /decrypt|operation|tag/i.test(String(e && e.name) + ' ' + (e && e.message))
+        ? 'Неверный пароль'
+        : 'Не удалось открыть отчёт: ' + (e && e.message || e);
+    } finally {
+      $('#openBtn').disabled = false;
+    }
+  }
+
+  function lock() {
+    payload = null;
+    password = '';
+    $('#report').classList.add('hide');
+    $('#lockBtn').classList.add('hide');
+    $('#gate').classList.remove('hide');
+    $('#sub').textContent = 'Заблокировано';
+    $('#pw').focus();
+  }
+
+  $('#openBtn').addEventListener('click', function () { open($('#pw').value); });
+  $('#pw').addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') open($('#pw').value);
   });
-}
+  $('#lockBtn').addEventListener('click', lock);
+  $('#csvBtn').addEventListener('click', function () { if (payload) exportCsv(payload); });
 
-function render(s) {
-  $('#sub').textContent = 'Обновлено: ' + fmtDate(s.generatedAt) +
-    ' · прохождений: ' + s.total;
-
-  const kpis = [
-    { t: 'Всего прохождений', v: s.total },
-    { t: 'Средний рейтинг', v: s.avgRating ? s.avgRating.toFixed(2) : '—',
-      cls: s.avgRating >= s.positiveMin ? 'pos' : 'neg' },
-    { t: 'Положительных (≥ ' + s.positiveMin + ')', v: s.positive, cls: 'pos' },
-    { t: 'Отрицательных (< ' + s.positiveMin + ')', v: s.negative, cls: 'neg' },
-    { t: 'Первый раз — средний', v: s.avgFirst ? s.avgFirst.toFixed(2) : '—' },
-    { t: 'Повторно — средний', v: s.avgRepeat ? s.avgRepeat.toFixed(2) : '—' }
-  ];
-  $('#kpis').innerHTML = kpis.map((k) =>
-    '<div class="kpi ' + (k.cls || '') + '"><div class="t">' + esc(k.t) +
-    '</div><div class="v">' + esc(k.v) + '</div></div>').join('');
-
-  const dist = s.dist || {};
-  const maxD = Math.max(1, ...Object.values(dist).map(Number));
-  $('#dist').innerHTML = Object.keys(dist).map((k) => {
-    const n = Number(dist[k]) || 0;
-    const cls = Number(k) >= s.positiveMin ? 'pos' : 'neg';
-    return '<div class="bar ' + cls + '"><div>' + esc(k) + '</div>' +
-      '<div class="track"><div class="fill" style="width:' + (n / maxD * 100) + '%"></div></div>' +
-      '<div class="n">' + n + '</div></div>';
-  }).join('');
-
-  $('#questions').innerHTML = (s.questions || []).map((item) =>
-    '<div class="q"><div class="qt">' + esc(item.q) + '</div><div class="chips">' +
-    item.items.slice(0, 12).map((x) =>
-      '<span class="chip">' + esc(x.value) + ' <b>' + x.count + '</b></span>').join('') +
-    '</div></div>').join('') || '<div class="empty">Пока нет ответов</div>';
-
-  $('#recent').innerHTML = (s.recent || []).map((r) => {
-    const cls = r.rating != null && r.rating >= s.positiveMin ? 'pos' : 'neg';
-    return '<div class="resp"><div class="score ' + cls + '">' +
-      (r.rating == null ? '—' : r.rating) + '</div>' +
-      '<div class="meta">' + esc(fmtDate(r.date)) + ' · ' + esc(r.branch) + '</div></div>';
-  }).join('') || '<div class="empty">Пока нет прохождений</div>';
-
-  $('#content').classList.remove('hide');
-}
-
-fetch('stats.json', { cache: 'no-store' })
-  .then((r) => { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
-  .then(render)
-  .catch((err) => {
-    $('#sub').textContent = 'Данные ещё не опубликованы (' + err.message + ')';
+  document.querySelectorAll('.tab').forEach(function (b) {
+    b.addEventListener('click', function () { showTab(b.dataset.tab); });
   });
+
+  ['#q', '#fBranch', '#fRating', '#fSort'].forEach(function (sel) {
+    var el = document.querySelector(sel);
+    el.addEventListener(el.tagName === 'SELECT' ? 'change' : 'input', function () {
+      if (payload) renderList(payload);
+    });
+  });
+
+  /* проверим, опубликованы ли данные */
+  fetch(DATA_URL, { method: 'HEAD', cache: 'no-store' })
+    .then(function (r) {
+      if (!r.ok) $('#sub').textContent = 'Данные ещё не опубликованы';
+      else $('#sub').textContent = 'Введите пароль, чтобы открыть отчёт';
+    })
+    .catch(function () { $('#sub').textContent = 'Данные ещё не опубликованы'; });
+
+  /* для тестов */
+  window.__report = {
+    decryptBlob: decryptBlob,
+    renderOverview: renderOverview,
+    renderQuestions: renderQuestions,
+    renderList: renderList,
+    setPayload: function (p) { payload = p; },
+    exportCsv: exportCsv
+  };
+})();
 </script>
 </body>
 </html>
