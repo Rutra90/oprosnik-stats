@@ -1,0 +1,49 @@
+name: Обновление отчёта
+
+on:
+  schedule:
+    # каждый час; время в UTC
+    - cron: '0 * * * *'
+  workflow_dispatch:
+  push:
+    branches: [master]
+    paths:
+      - 'tools/build.mjs'
+      - '.github/workflows/report.yml'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: report-build
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Забрать репозиторий
+        uses: actions/checkout@v4
+
+      - name: Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Собрать и зашифровать отчёт
+        env:
+          YA_TOKEN: ${{ secrets.YA_TOKEN }}
+          REPORT_PASSWORD: ${{ secrets.REPORT_PASSWORD }}
+        run: node tools/build.mjs
+
+      - name: Закоммитить, если данные изменились
+        run: |
+          git config user.name "oprosnik-bot"
+          git config user.email "oprosnik-bot@users.noreply.github.com"
+          if git diff --quiet -- data.enc.json; then
+            echo "Новых ответов нет — коммит не нужен."
+            exit 0
+          fi
+          git add data.enc.json
+          git commit -m "Отчёт обновлён автоматически"
+          git push
