@@ -2,8 +2,8 @@ name: Обновление отчёта
 
 on:
   schedule:
-    # каждый час; время в UTC
-    - cron: '0 * * * *'
+    # каждые 15 минут; время в UTC
+    - cron: '*/15 * * * *'
   workflow_dispatch:
   push:
     branches: [master]
